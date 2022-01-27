@@ -247,8 +247,6 @@ sub process_atrace
         return;
     }
 
-    $actions_counter++;
-
     my $aname = $act->{'name'};
     my $data = $act->{'data'};
 
@@ -280,12 +278,16 @@ sub process_atrace
                 if( $data->{'memo'} eq 'mint' )
                 {
                     $sth_add_lend->execute($seq, $block_num, $block_time, $trx_id, $from, $contract, $currency, $amount);
+                    print STDERR "<";
                 }
             }
             elsif( $data->{'memo'} =~ /^claim\s+([A-Z]{1,7})/ )
             {
                 $sth_add_claim->execute($seq, $block_num, $block_time, $trx_id, $to, $1, $contract, $currency, $amount);
+                print STDERR ">";
             }
+
+            $actions_counter++;
         }
     }
     elsif( $contract eq $loan_contract )
@@ -296,6 +298,8 @@ sub process_atrace
             my ($amount, $currency) = split(/\s+/, $asset);
             $sth_add_borrow->execute($seq, $block_num, $block_time, $trx_id,
                                      $data->{'borrower'}, $data->{'underlying'}{'contract'}, $currency, $amount);
+            $actions_counter++;
+            print STDERR ".";
         }
         elsif( $aname eq 'log.repay' )
         {
@@ -305,6 +309,8 @@ sub process_atrace
                                     $data->{'borrower'}, $data->{'payer'},
                                     $data->{'underlying_repaid'}{'contract'}, $currency, $amount,
                                     $data->{'user_borrow_rate'}, $data->{'utilization'});
+            $actions_counter++;
+            print STDERR "+";
         }
         elsif( $aname eq 'log.seize' )
         {
@@ -317,6 +323,8 @@ sub process_atrace
                                         $data->{'tokens_seized'}{'contract'}, $currency_seized, $amount_seized,
                                         $data->{'tokens_repaid'}{'contract'}, $currency_repaid, $amount_repaid,
                                         $data->{'value_repaid'}, $data->{'value_seized'});
+            $actions_counter++;
+            print STDERR "-";
         }
     }
 }
