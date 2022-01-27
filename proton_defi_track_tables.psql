@@ -1,0 +1,104 @@
+use proton_defi_track;
+
+
+
+CREATE TABLE %%_LOAN_LEND
+(
+ seq            BIGINT UNSIGNED PRIMARY KEY,
+ block_num      BIGINT NOT NULL,
+ block_time     DATETIME NOT NULL,
+ trx_id         VARCHAR(64) NOT NULL,
+ lender         VARCHAR(13) NOT NULL,
+ tkcontract     VARCHAR(13) NOT NULL,
+ currency       VARCHAR(7) NOT NULL,
+ amount         DECIMAL(30,15)
+)  ENGINE=InnoDB;
+
+CREATE INDEX %%_LOAN_LEND_I01 ON %%_LOAN_LEND (block_time);
+CREATE INDEX %%_LOAN_LEND_I02 ON %%_LOAN_LEND (trx_id(8));
+CREATE INDEX %%_LOAN_LEND_I03 ON %%_LOAN_LEND (lender, block_time);
+
+
+
+CREATE TABLE %%_LOAN_BORROW
+(
+ seq            BIGINT UNSIGNED PRIMARY KEY,
+ block_num      BIGINT NOT NULL,
+ block_time     DATETIME NOT NULL,
+ trx_id         VARCHAR(64) NOT NULL,
+ borrower       VARCHAR(13) NOT NULL,
+ tkcontract     VARCHAR(13) NOT NULL,
+ currency       VARCHAR(7) NOT NULL,
+ amount         DECIMAL(30,15)
+)  ENGINE=InnoDB;
+
+CREATE INDEX %%_LOAN_BORROW_I01 ON %%_LOAN_BORROW (block_time);
+CREATE INDEX %%_LOAN_BORROW_I02 ON %%_LOAN_BORROW (trx_id(8));
+CREATE INDEX %%_LOAN_BORROW_I03 ON %%_LOAN_BORROW (borrower, block_time);
+
+
+
+CREATE TABLE %%_LOAN_REPAY
+(
+ seq                   BIGINT UNSIGNED PRIMARY KEY,
+ block_num             BIGINT NOT NULL,
+ block_time            DATETIME NOT NULL,
+ trx_id                VARCHAR(64) NOT NULL,
+ borrower              VARCHAR(13) NOT NULL,
+ payer                 VARCHAR(13) NOT NULL,
+ tkcontract            VARCHAR(13) NOT NULL,
+ currency              VARCHAR(7) NOT NULL,
+ amount                DECIMAL(30,15),
+ user_borrow_rate      DOUBLE NOT NULL,
+ utilization           DOUBLE NOT NULL
+)  ENGINE=InnoDB;
+
+CREATE INDEX %%_LOAN_REPAY_I01 ON %%_LOAN_REPAY (block_time);
+CREATE INDEX %%_LOAN_REPAY_I02 ON %%_LOAN_REPAY (trx_id(8));
+CREATE INDEX %%_LOAN_REPAY_I03 ON %%_LOAN_REPAY (borrower, block_time);
+CREATE INDEX %%_LOAN_REPAY_I04 ON %%_LOAN_REPAY (payer, block_time);
+
+
+
+CREATE TABLE %%_LOAN_LIQUIDATE
+(
+ seq                   BIGINT UNSIGNED PRIMARY KEY,
+ block_num             BIGINT NOT NULL,
+ block_time            DATETIME NOT NULL,
+ trx_id                VARCHAR(64) NOT NULL,
+ borrower              VARCHAR(13) NOT NULL,
+ liquidator            VARCHAR(13) NOT NULL,
+ seized_tkcontract     VARCHAR(13) NOT NULL,
+ seized_currency       VARCHAR(7) NOT NULL,
+ seized_amount         DECIMAL(30,15),
+ repaid_tkcontract     VARCHAR(13) NOT NULL,
+ repaid_currency       VARCHAR(7) NOT NULL,
+ repaid_amount         DECIMAL(30,15),
+ value_repaid          DOUBLE NOT NULL,
+ value_seized          DOUBLE NOT NULL
+)  ENGINE=InnoDB;
+
+CREATE INDEX %%_LOAN_LIQUIDATE_I01 ON %%_LOAN_LIQUIDATE (block_time);
+CREATE INDEX %%_LOAN_LIQUIDATE_I02 ON %%_LOAN_LIQUIDATE (trx_id(8));
+CREATE INDEX %%_LOAN_LIQUIDATE_I03 ON %%_LOAN_LIQUIDATE (borrower, block_time);
+CREATE INDEX %%_LOAN_LIQUIDATE_I04 ON %%_LOAN_LIQUIDATE (liquidator, block_time);
+
+
+CREATE TABLE %%_LOAN_CLAIM
+(
+ seq            BIGINT UNSIGNED PRIMARY KEY,
+ block_num      BIGINT NOT NULL,
+ block_time     DATETIME NOT NULL,
+ trx_id         VARCHAR(64) NOT NULL,
+ claimer        VARCHAR(13) NOT NULL,
+ market         VARCHAR(7) NOT NULL,
+ tkcontract     VARCHAR(13) NOT NULL,
+ currency       VARCHAR(7) NOT NULL,
+ amount         DECIMAL(30,15)
+)  ENGINE=InnoDB;
+
+CREATE INDEX %%_LOAN_CLAIM_I01 ON %%_LOAN_CLAIM (block_time);
+CREATE INDEX %%_LOAN_CLAIM_I02 ON %%_LOAN_CLAIM (trx_id(8));
+CREATE INDEX %%_LOAN_CLAIM_I03 ON %%_LOAN_CLAIM (claimer, block_time);
+CREATE INDEX %%_LOAN_CLAIM_I04 ON %%_LOAN_CLAIM (market, block_time);
+

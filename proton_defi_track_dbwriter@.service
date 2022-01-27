@@ -1,0 +1,27 @@
+# This unit's instance name is the EOSIO network name
+# The instance requires an environment file /etc/default/proton_defi_track_%i
+# The mandatory variable DBWRITE_OPTS should include at least
+# the websocket server port for Chronicle export.
+
+
+[Unit]
+Description=proton_defi_track DB Writer
+After=mariadb.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/proton_defi_track_%i
+
+ExecStart=/usr/bin/perl /opt/proton_defi_track/proton_defi_track_dbwriter.pl --network=%i $DBWRITE_OPTS
+TimeoutSec=45s
+Restart=always
+RestartSec=10
+User=root
+Group=daemon
+KillMode=control-group
+
+
+[Install]
+WantedBy=multi-user.target
+
+
