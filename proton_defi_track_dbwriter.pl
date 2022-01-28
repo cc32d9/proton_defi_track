@@ -316,12 +316,12 @@ sub process_atrace
         {
             my $asset_seized = $data->{'tokens_seized'}{'quantity'};
             my ($amount_seized, $currency_seized) = split(/\s+/, $asset_seized);
-            my $asset_repaid = $data->{'underlying_repaid'}{'asset'};
+            my $asset_repaid = $data->{'underlying_repaid'}{'quantity'};
             my ($amount_repaid, $currency_repaid) = split(/\s+/, $asset_repaid);
             $sth_add_liquidate->execute($seq, $block_num, $block_time, $trx_id,
                                         $data->{'borrower'}, $data->{'liquidator'},
                                         $data->{'tokens_seized'}{'contract'}, $currency_seized, $amount_seized,
-                                        $data->{'tokens_repaid'}{'contract'}, $currency_repaid, $amount_repaid,
+                                        $data->{'underlying_repaid'}{'contract'}, $currency_repaid, $amount_repaid,
                                         $data->{'value_repaid'}, $data->{'value_seized'});
             $actions_counter++;
             print STDERR "-";
