@@ -102,3 +102,25 @@ CREATE INDEX %%_LOAN_CLAIM_I02 ON %%_LOAN_CLAIM (trx_id(8));
 CREATE INDEX %%_LOAN_CLAIM_I03 ON %%_LOAN_CLAIM (claimer, block_time);
 CREATE INDEX %%_LOAN_CLAIM_I04 ON %%_LOAN_CLAIM (market, block_time);
 
+
+CREATE TABLE %%_LOAN_REDEEM
+(
+ seq                   BIGINT UNSIGNED PRIMARY KEY,
+ block_num             BIGINT NOT NULL,
+ block_time            DATETIME NOT NULL,
+ trx_id                VARCHAR(64) NOT NULL,
+ redeemer              VARCHAR(13) NOT NULL,
+ redeem_tkcontract     VARCHAR(13) NOT NULL,
+ redeem_currency       VARCHAR(7) NOT NULL,
+ redeem_amount         DECIMAL(30,15) NOT NULL,
+ issued_tkcontract     VARCHAR(13) NULL,
+ issued_currency       VARCHAR(7) NULL,
+ issued_amount         DECIMAL(30,15) NULL,
+ payout_tkcontract     VARCHAR(13) NOT NULL,
+ payout_currency       VARCHAR(7) NOT NULL,
+ payout_amount         DECIMAL(30,15) NOT NULL
+)  ENGINE=InnoDB;
+
+CREATE INDEX %%_LOAN_REDEEM_I01 ON %%_LOAN_REDEEM (block_time);
+CREATE INDEX %%_LOAN_REDEEM_I02 ON %%_LOAN_REDEEM (trx_id(8));
+CREATE INDEX %%_LOAN_REDEEM_I03 ON %%_LOAN_REDEEM (redeemer, block_time);

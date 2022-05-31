@@ -91,6 +91,13 @@ my $sth_add_claim = $dbh->prepare
      '(seq, block_num, block_time, trx_id, claimer, market, tkcontract, currency, amount) ' .
      'VALUES(?,?,?,?,?,?,?,?,?)');
 
+my $sth_add_redeem = $dbh->prepare
+    ('INSERT INTO ' . $network . '_LOAN_REDEEM ' .
+     '(seq, block_num, block_time, trx_id, redeemer, redeem_tkcontract, redeem_currency, redeem_amount, ' .
+     'issued_tkcontract, issued_currency, issued_amount, ' .
+     'payout_tkcontract, payout_currency, payout_amount) ' .
+     'VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+
 
 my $sth_upd_sync = $dbh->prepare
     ('INSERT INTO SYNC (network, block_num) VALUES(?,?) ' .
@@ -191,6 +198,17 @@ sub process_data
                 {
                     process_atrace($atrace, $tx);
                 }
+
+                if( defined($tx->{'redeem'}) )
+                {
+                    my $r = $tx->{'redeem'};
+                    $sth_add_redeem->execute
+                        ($r->{'seq'}, $data->{'block_num'}, $block_time, $trace->{'id'},
+                         $r->{'redeemer'}, $r->{'redeem_tkcontract'}, $r->{'redeem_currency'}, $r->{'redeem_amount'},
+                         $r->{'issued_tkcontract'}, $r->{'issued_currency'}, $r->{'issued_amount'},
+                         $r->{'payout_tkcontract'}, $r->{'payout_currency'}, $r->{'payout_amount'});
+                    print STDERR "!";
+                }
             }
         }
     }
@@ -286,6 +304,22 @@ sub process_atrace
                 $sth_add_claim->execute($seq, $block_num, $block_time, $trx_id, $to, $1, $contract, $currency, $amount);
                 print STDERR ">";
             }
+            elsif( $data->{'memo'} eq 'redeem' )
+            {
+                if( defined($tx->{'redeem'}) )
+                {
+                    my $r = $tx->{'redeem'};
+                    $r->{'payout_tkcontract'} = $contract;
+                    $r->{'payout_currency'} = $currency;
+                    $r->{'payout_amount'} = $amount;
+                }
+                else
+                {
+                    printf STDERR ("outgoing transfer without proper redeem action: block=%d, txid=%s\n",
+                                   $block_num, $trx_id);
+                    exit(1);
+                }
+            }
 
             $actions_counter++;
         }
@@ -325,6 +359,37 @@ sub process_atrace
                                         $data->{'value_repaid'}, $data->{'value_seized'});
             $actions_counter++;
             print STDERR "-";
+        }
+        elsif( $aname eq 'redeem' )
+        {
+            $tx->{'redeem'} = {};
+            my $r = $tx->{'redeem'};
+            $r->{'seq'} = $seq;
+            $r->{'redeemer'} = $data->{'redeemer'};
+            $r->{'redeem_tkcontract'} = $data->{'token'}{'contract'};
+            my $asset = $data->{'token'}{'quantity'};
+            my ($amount, $currency) = split(/\s+/, $asset);
+            $r->{'redeem_currency'} = $currency;
+            $r->{'redeem_amount'} = $amount;
+            $actions_counter++;
+        }
+    }
+    elsif( ($aname eq 'issue') and defined($data->{'quantity'}) and defined($data->{'to'}) )
+    {
+        my $to = $data->{'to'};
+        if( $to eq $loan_contract and defined($tx->{'redeem'}) )
+        {
+            my ($amount, $currency) = split(/\s+/, $data->{'quantity'});
+            if( not defined($amount) or not defined($currency) or
+                $amount !~ /^[0-9.]+$/ or $currency !~ /^[A-Z]{1,7}$/ )
+            {
+                return;
+            }
+
+            my $r = $tx->{'redeem'};
+            $r->{'issued_tkcontract'} = $contract;
+            $r->{'issued_currency'} = $currency;
+            $r->{'issued_amount'} = $amount;
         }
     }
 }
