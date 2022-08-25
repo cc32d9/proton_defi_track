@@ -4,14 +4,16 @@ use proton_defi_track;
 
 CREATE TABLE %%_LOAN_LEND
 (
- seq            BIGINT UNSIGNED PRIMARY KEY,
- block_num      BIGINT NOT NULL,
- block_time     DATETIME NOT NULL,
- trx_id         VARCHAR(64) NOT NULL,
- lender         VARCHAR(13) NOT NULL,
- tkcontract     VARCHAR(13) NOT NULL,
- currency       VARCHAR(7) NOT NULL,
- amount         DECIMAL(30,15)
+ seq                    BIGINT UNSIGNED PRIMARY KEY,
+ block_num              BIGINT NOT NULL,
+ block_time             DATETIME NOT NULL,
+ trx_id                 VARCHAR(64) NOT NULL,
+ lender                 VARCHAR(13) NOT NULL,
+ tkcontract             VARCHAR(13) NOT NULL,
+ currency               VARCHAR(7) NOT NULL,
+ amount                 DECIMAL(30,15),
+ shares_currency        VARCHAR(7) NOT NULL,
+ shares_amount          DECIMAL(30,15)
 )  ENGINE=InnoDB;
 
 CREATE INDEX %%_LOAN_LEND_I01 ON %%_LOAN_LEND (block_time);
@@ -22,14 +24,16 @@ CREATE INDEX %%_LOAN_LEND_I03 ON %%_LOAN_LEND (lender, block_time);
 
 CREATE TABLE %%_LOAN_BORROW
 (
- seq            BIGINT UNSIGNED PRIMARY KEY,
- block_num      BIGINT NOT NULL,
- block_time     DATETIME NOT NULL,
- trx_id         VARCHAR(64) NOT NULL,
- borrower       VARCHAR(13) NOT NULL,
- tkcontract     VARCHAR(13) NOT NULL,
- currency       VARCHAR(7) NOT NULL,
- amount         DECIMAL(30,15)
+ seq                    BIGINT UNSIGNED PRIMARY KEY,
+ block_num              BIGINT NOT NULL,
+ block_time             DATETIME NOT NULL,
+ trx_id                 VARCHAR(64) NOT NULL,
+ borrower               VARCHAR(13) NOT NULL,
+ tkcontract             VARCHAR(13) NOT NULL,
+ currency               VARCHAR(7) NOT NULL,
+ amount                 DECIMAL(30,15),
+ user_borrow_rate       DOUBLE NOT NULL,
+ utilization            DOUBLE NOT NULL
 )  ENGINE=InnoDB;
 
 CREATE INDEX %%_LOAN_BORROW_I01 ON %%_LOAN_BORROW (block_time);

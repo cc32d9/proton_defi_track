@@ -29,6 +29,7 @@ my $db_password = 'keiH8eej';
 my $commit_every = 10;
 my $endblock = 2**32 - 1;
 my $loan_contract = 'lending.loan';
+my $shares_contract = 'shares.loan';
 
 my $ok = GetOptions
     ('network=s' => \$network,
@@ -39,6 +40,7 @@ my $ok = GetOptions
      'dbuser=s'  => \$db_user,
      'dbpw=s'    => \$db_password,
      'loan=s'    => \$loan_contract,
+     'shares=s'  => \$shares_contract,
     );
 
 
@@ -65,13 +67,13 @@ die($DBI::errstr) unless $dbh;
 
 my $sth_add_lend = $dbh->prepare
     ('INSERT INTO ' . $network . '_LOAN_LEND ' .
-     '(seq, block_num, block_time, trx_id, lender, tkcontract, currency, amount) ' .
-     'VALUES(?,?,?,?,?,?,?,?)');
+     '(seq, block_num, block_time, trx_id, lender, tkcontract, currency, amount, shares_currency, shares_amount) ' .
+     'VALUES(?,?,?,?,?,?,?,?,?,?)');
 
 my $sth_add_borrow = $dbh->prepare
     ('INSERT INTO ' . $network . '_LOAN_BORROW ' .
-     '(seq, block_num, block_time, trx_id, borrower, tkcontract, currency, amount) ' .
-     'VALUES(?,?,?,?,?,?,?,?)');
+     '(seq, block_num, block_time, trx_id, borrower, tkcontract, currency, amount, user_borrow_rate, utilization) ' .
+     'VALUES(?,?,?,?,?,?,?,?,?,?)');
 
 my $sth_add_repay = $dbh->prepare
     ('INSERT INTO ' . $network . '_LOAN_REPAY ' .
@@ -209,6 +211,15 @@ sub process_data
                          $r->{'payout_tkcontract'}, $r->{'payout_currency'}, $r->{'payout_amount'});
                     print STDERR "!";
                 }
+                elsif( defined($tx->{'lend'}) )
+                {
+                    my $r = $tx->{'lend'};
+                    $sth_add_lend->execute
+                        ($r->{'seq'}, $data->{'block_num'}, $block_time, $trace->{'id'},
+                         $r->{'lender'}, $r->{'tkcontract'}, $r->{'currency'}, $r->{'amount'},
+                         $r->{'shares_currency'}, $r->{'shares_amount'});
+                    print STDERR "<";
+                }
             }
         }
     }
@@ -295,8 +306,13 @@ sub process_atrace
             {
                 if( $data->{'memo'} eq 'mint' )
                 {
-                    $sth_add_lend->execute($seq, $block_num, $block_time, $trx_id, $from, $contract, $currency, $amount);
-                    print STDERR "<";
+                    $tx->{'lend'} = {};
+                    my $r = $tx->{'lend'};
+                    $r->{'seq'} = $seq;
+                    $r->{'lender'} = $from;
+                    $r->{'tkcontract'} = $contract;
+                    $r->{'currency'} = $currency;
+                    $r->{'amount'} = $amount;
                 }
             }
             elsif( $data->{'memo'} =~ /^claim\s+([A-Z]{1,7})/ )
@@ -331,7 +347,8 @@ sub process_atrace
             my $asset = $data->{'underlying'}{'quantity'};
             my ($amount, $currency) = split(/\s+/, $asset);
             $sth_add_borrow->execute($seq, $block_num, $block_time, $trx_id,
-                                     $data->{'borrower'}, $data->{'underlying'}{'contract'}, $currency, $amount);
+                                     $data->{'borrower'}, $data->{'underlying'}{'contract'}, $currency, $amount,
+                                     $data->{'user_borrow_rate'}, $data->{'utilization'});
             $actions_counter++;
             print STDERR ".";
         }
@@ -377,7 +394,7 @@ sub process_atrace
     elsif( ($aname eq 'issue') and defined($data->{'quantity'}) and defined($data->{'to'}) )
     {
         my $to = $data->{'to'};
-        if( $to eq $loan_contract and defined($tx->{'redeem'}) )
+        if( $to eq $loan_contract )
         {
             my ($amount, $currency) = split(/\s+/, $data->{'quantity'});
             if( not defined($amount) or not defined($currency) or
@@ -386,10 +403,19 @@ sub process_atrace
                 return;
             }
 
-            my $r = $tx->{'redeem'};
-            $r->{'issued_tkcontract'} = $contract;
-            $r->{'issued_currency'} = $currency;
-            $r->{'issued_amount'} = $amount;
+            if( defined($tx->{'redeem'}) )
+            {
+                my $r = $tx->{'redeem'};
+                $r->{'issued_tkcontract'} = $contract;
+                $r->{'issued_currency'} = $currency;
+                $r->{'issued_amount'} = $amount;
+            }
+            elsif( defined($tx->{'lend'}) and $contract eq $shares_contract )
+            {
+                my $r = $tx->{'lend'};
+                $r->{'shares_currency'} = $currency;
+                $r->{'shares_amount'} = $amount;
+            }
         }
     }
 }
