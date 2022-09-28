@@ -128,3 +128,38 @@ CREATE TABLE %%_LOAN_REDEEM
 CREATE INDEX %%_LOAN_REDEEM_I01 ON %%_LOAN_REDEEM (block_time);
 CREATE INDEX %%_LOAN_REDEEM_I02 ON %%_LOAN_REDEEM (trx_id(8));
 CREATE INDEX %%_LOAN_REDEEM_I03 ON %%_LOAN_REDEEM (redeemer, block_time);
+
+
+CREATE TABLE %%_LOAN_TBL_BORROWS
+(
+ block_num                      BIGINT NOT NULL,
+ block_time                     DATETIME NOT NULL,
+ account                        VARCHAR(13) NOT NULL,
+ tkcontract                     VARCHAR(13) NOT NULL,
+ currency                       VARCHAR(7) NOT NULL,
+ variable_principal             BIGINT NOT NULL,
+ variable_interest_index        DOUBLE NOT NULL,
+ stable_principal               BIGINT NOT NULL,
+ last_stable_update             DATETIME NOT NULL,
+ stable_rate                    DOUBLE NOT NULL
+)  ENGINE=InnoDB;
+
+CREATE UNIQUE INDEX %%_LOAN_TBL_BORROWS_I01 ON %%_LOAN_TBL_BORROWS (block_time, account, tkcontract, currency);
+CREATE INDEX %%_LOAN_TBL_BORROWS_I02 ON %%_LOAN_TBL_BORROWS (account, block_time);
+CREATE INDEX %%_LOAN_TBL_BORROWS_I03 ON %%_LOAN_TBL_BORROWS (currency, block_time);
+
+
+CREATE TABLE %%_LOAN_TBL_MARKETS
+(
+ block_num                      BIGINT NOT NULL,
+ block_time                     DATETIME NOT NULL,
+ tkcontract                     VARCHAR(13) NOT NULL,
+ currency                       VARCHAR(7) NOT NULL,
+ borrow_index                   DOUBLE NOT NULL,
+ variable_accrual_time          DATETIME NOT NULL,
+ total_variable_borrows         DECIMAL(30,15) NULL,
+ total_reserves                 DECIMAL(30,15) NULL
+)  ENGINE=InnoDB;
+
+CREATE UNIQUE INDEX %%_LOAN_TBL_MARKETS_I01 ON %%_LOAN_TBL_MARKETS (block_time, tkcontract, currency);
+CREATE INDEX %%_LOAN_TBL_MARKETS_I02 ON %%_LOAN_TBL_MARKETS (currency, block_time);
