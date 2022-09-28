@@ -236,72 +236,75 @@ sub process_data
     }
     elsif( $msgtype == 1007 ) # CHRONICLE_MSGTYPE_TBL_ROW
     {
-        my $kvo = $data->{'kvo'};
-        my $contract = $kvo->{'code'};
-
-        return(-1) unless $contract eq $loan_contract;
-        return(-1) unless ref($kvo->{'value'}) eq 'HASH';
-
-        my $block_num = $data->{'block_num'};
-        my $block_time = $data->{'block_timestamp'};
-        $block_time =~ s/T/ /;
-
-        my $scope = $kvo->{'scope'};
-        my $tbl = $kvo->{'table'};
-
-        if( $tbl eq 'borrows' and $scope eq $loan_contract )
+        if( $data->{'block_num'} > $stored_block )
         {
-            my $val = $kvo->{'value'};
-            my $account = $val->{'account'};
-            foreach my $entry (@{$val->{'tokens'}})
+            my $kvo = $data->{'kvo'};
+            my $contract = $kvo->{'code'};
+
+            return(-1) unless $contract eq $loan_contract;
+            return(-1) unless ref($kvo->{'value'}) eq 'HASH';
+
+            my $block_num = $data->{'block_num'};
+            my $block_time = $data->{'block_timestamp'};
+            $block_time =~ s/T/ /;
+
+            my $scope = $kvo->{'scope'};
+            my $tbl = $kvo->{'table'};
+
+            if( $tbl eq 'borrows' and $scope eq $loan_contract )
             {
-                my $value = $entry->{'value'};
-                my $last_stable_update = $value->{'last_stable_update'};
-                $last_stable_update =~ s/T/ /;
-
-                # convert 8,LBTC to LBTC
-                my $currency = $entry->{'key'}{'sym'};
-                $currency =~ s/^\d+,//;
-
-                if( $data->{'added'} eq 'true' )
+                my $val = $kvo->{'value'};
+                my $account = $val->{'account'};
+                foreach my $entry (@{$val->{'tokens'}})
                 {
-                    $sth_add_tbl_borrows->execute
-                        ($block_num, $block_time, $account,
-                         $entry->{'key'}{'contract'}, $currency,
-                         $value->{'variable_principal'}, $value->{'variable_interest_index'},
-                         $value->{'stable_principal'}, $last_stable_update, $value->{'stable_rate'});
-                }
-                else {
-                    $sth_add_tbl_borrows->execute
-                        ($block_num, $block_time, $account,
-                         $entry->{'key'}{'contract'}, $currency,
-                         0, 0, 0, $last_stable_update, 0);
+                    my $value = $entry->{'value'};
+                    my $last_stable_update = $value->{'last_stable_update'};
+                    $last_stable_update =~ s/T/ /;
+
+                    # convert 8,LBTC to LBTC
+                    my $currency = $entry->{'key'}{'sym'};
+                    $currency =~ s/^\d+,//;
+
+                    if( $data->{'added'} eq 'true' )
+                    {
+                        $sth_add_tbl_borrows->execute
+                            ($block_num, $block_time, $account,
+                             $entry->{'key'}{'contract'}, $currency,
+                             $value->{'variable_principal'}, $value->{'variable_interest_index'},
+                             $value->{'stable_principal'}, $last_stable_update, $value->{'stable_rate'});
+                    }
+                    else {
+                        $sth_add_tbl_borrows->execute
+                            ($block_num, $block_time, $account,
+                             $entry->{'key'}{'contract'}, $currency,
+                             0, 0, 0, $last_stable_update, 0);
+                    }
                 }
             }
-        }
-        elsif( $tbl eq 'markets' and $scope eq $loan_contract and $data->{'added'} eq 'true' )
-        {
-            my $val = $kvo->{'value'};
+            elsif( $tbl eq 'markets' and $scope eq $loan_contract and $data->{'added'} eq 'true' )
+            {
+                my $val = $kvo->{'value'};
 
-            my $variable_accrual_time = $val->{'variable_accrual_time'};
-            $variable_accrual_time =~ s/T/ /;
+                my $variable_accrual_time = $val->{'variable_accrual_time'};
+                $variable_accrual_time =~ s/T/ /;
 
-            # convert 8,LBTC to LBTC
-            my $share_currency = $val->{'share_symbol'}{'sym'};
-            $share_currency =~ s/^\d+,//;
+                # convert 8,LBTC to LBTC
+                my $share_currency = $val->{'share_symbol'}{'sym'};
+                $share_currency =~ s/^\d+,//;
 
-            my $currency;
-            my $total_variable_borrows;
-            my $asset = $val->{'total_variable_borrows'}{'quantity'};
-            ($total_variable_borrows, $currency) = split(/\s+/, $asset);
+                my $currency;
+                my $total_variable_borrows;
+                my $asset = $val->{'total_variable_borrows'}{'quantity'};
+                ($total_variable_borrows, $currency) = split(/\s+/, $asset);
 
-            my $total_reserves;
-            $asset = $val->{'total_reserves'}{'quantity'};
-            ($total_reserves, $currency) = split(/\s+/, $asset);
+                my $total_reserves;
+                $asset = $val->{'total_reserves'}{'quantity'};
+                ($total_reserves, $currency) = split(/\s+/, $asset);
 
-            $sth_add_tbl_markets->execute
-                ($block_num, $block_time, $val->{'share_symbol'}{'contract'}, $share_currency,
-                 $val->{'borrow_index'}, $variable_accrual_time, $total_variable_borrows, $total_reserves);
+                $sth_add_tbl_markets->execute
+                    ($block_num, $block_time, $val->{'share_symbol'}{'contract'}, $share_currency,
+                     $val->{'borrow_index'}, $variable_accrual_time, $total_variable_borrows, $total_reserves);
+            }
         }
     }
     elsif( $msgtype == 1010 ) # CHRONICLE_MSGTYPE_BLOCK_COMPLETED
