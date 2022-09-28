@@ -144,9 +144,9 @@ CREATE TABLE %%_LOAN_TBL_BORROWS
  stable_rate                    DOUBLE NOT NULL
 )  ENGINE=InnoDB;
 
-CREATE UNIQUE INDEX %%_LOAN_TBL_BORROWS_I01 ON %%_LOAN_TBL_BORROWS (block_time, account, tkcontract, currency);
-CREATE INDEX %%_LOAN_TBL_BORROWS_I02 ON %%_LOAN_TBL_BORROWS (account, block_time);
-CREATE INDEX %%_LOAN_TBL_BORROWS_I03 ON %%_LOAN_TBL_BORROWS (currency, block_time);
+CREATE UNIQUE INDEX %%_LOAN_TBL_BORROWS_I01 ON %%_LOAN_TBL_BORROWS (block_num, account, tkcontract, currency);
+CREATE INDEX %%_LOAN_TBL_BORROWS_I02 ON %%_LOAN_TBL_BORROWS (account, block_num);
+CREATE INDEX %%_LOAN_TBL_BORROWS_I03 ON %%_LOAN_TBL_BORROWS (currency, block_num);
 
 
 CREATE TABLE %%_LOAN_TBL_MARKETS
@@ -161,5 +161,5 @@ CREATE TABLE %%_LOAN_TBL_MARKETS
  total_reserves                 DECIMAL(30,15) NULL
 )  ENGINE=InnoDB;
 
-CREATE UNIQUE INDEX %%_LOAN_TBL_MARKETS_I01 ON %%_LOAN_TBL_MARKETS (block_time, tkcontract, currency);
-CREATE INDEX %%_LOAN_TBL_MARKETS_I02 ON %%_LOAN_TBL_MARKETS (currency, block_time);
+CREATE UNIQUE INDEX %%_LOAN_TBL_MARKETS_I01 ON %%_LOAN_TBL_MARKETS (block_num, tkcontract, currency);
+CREATE INDEX %%_LOAN_TBL_MARKETS_I02 ON %%_LOAN_TBL_MARKETS (currency, block_num);
