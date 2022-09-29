@@ -137,7 +137,7 @@ CREATE TABLE %%_LOAN_TBL_BORROWS
  account                        VARCHAR(13) NOT NULL,
  tkcontract                     VARCHAR(13) NOT NULL,
  currency                       VARCHAR(7) NOT NULL,
- variable_principal             BIGINT NOT NULL,
+ variable_principal             DOUBLE NOT NULL,
  variable_interest_index        DOUBLE NOT NULL,
  stable_principal               BIGINT NOT NULL,
  last_stable_update             DATETIME NOT NULL,

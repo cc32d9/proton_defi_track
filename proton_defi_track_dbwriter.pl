@@ -262,15 +262,14 @@ sub process_data
                     $last_stable_update =~ s/T/ /;
 
                     # convert 8,LBTC to LBTC
-                    my $currency = $entry->{'key'}{'sym'};
-                    $currency =~ s/^\d+,//;
+                    my ($precision, $currency) = split(/,/, $entry->{'key'}{'sym'});
 
                     if( $data->{'added'} eq 'true' )
                     {
                         $sth_add_tbl_borrows->execute
                             ($block_num, $block_time, $account,
                              $entry->{'key'}{'contract'}, $currency,
-                             $value->{'variable_principal'}, $value->{'variable_interest_index'},
+                             $value->{'variable_principal'} / 10**$precision, $value->{'variable_interest_index'},
                              $value->{'stable_principal'}, $last_stable_update, $value->{'stable_rate'});
                     }
                     else {
