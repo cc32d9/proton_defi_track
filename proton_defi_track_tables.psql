@@ -139,7 +139,7 @@ CREATE TABLE %%_LOAN_TBL_BORROWS
  currency                       VARCHAR(7) NOT NULL,
  variable_principal             DOUBLE NOT NULL,
  variable_interest_index        DOUBLE NOT NULL,
- stable_principal               BIGINT NOT NULL,
+ stable_principal               DOUBLE NOT NULL,
  last_stable_update             DATETIME NOT NULL,
  stable_rate                    DOUBLE NOT NULL
 )  ENGINE=InnoDB;
